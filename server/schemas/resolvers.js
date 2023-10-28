@@ -1,4 +1,3 @@
-const bcrypt = require('bcrypt');
 // import user model
 const { User } = require('../models');
 // import sign token function from auth
@@ -10,48 +9,35 @@ const resolvers = {
             if (context.user) {
                 return User.findOne({ _id: context.user._id })
             } throw AuthenticationError;
-        }
+        },
     },
     Mutation: {
         login: async (parent, { email, password }) => {
-            try {
-                // Find the user by their email
-                const user = await User.findOne({ email });
+            const profile = await User.findOne({ email });
 
-                if (!user) {
-                    throw new Error("Can't find this user");
-                }
-
-                // Check if the password is correct
-                const correctPw = await user.isCorrectPassword(password);
-
-                if (!correctPw) {
-                    throw new Error('Wrong password!');
-                }
-
-                // If the login is successful, create a token and return it along with the user data
-                const token = signToken(user);
-
-                return { token, user };
-            } catch (error) {
-                throw new Error(error);
+            if (!profile) {
+                throw AuthenticationError;
             }
+
+            const correctPw = await profile.isCorrectPassword(password);
+
+            if (!correctPw) {
+                throw AuthenticationError;
+            }
+
+            const token = signToken(profile);
+            return { token, profile };
         },
 
         addUser: async (parent, { username, email, password }) => {
             try {
-                // Hash the user's password before storing it
-                const hashedPassword = await bcrypt.hash(password, 10);
-
-                // Create the new user
-                const user = await User.create({ username, email, password: hashedPassword });
+                const user = await User.create({ username, email, password })
+                const token = signToken(user);
+            
 
                 if (!user) {
                     throw new Error('User creation failed');
                 }
-
-                // Generate a token and return it along with the user data
-                const token = signToken(user);
 
                 return { token, user };
             } catch (error) {
@@ -73,9 +59,8 @@ const resolvers = {
                 } catch (error) {
                     throw new Error(error.message);
                 }
-            } else {
+            } 
                 throw new AuthenticationError('You must be logged in to save a book.');
-            }
         },
 
         removeBook: async (parent, { bookId }, context) => {
