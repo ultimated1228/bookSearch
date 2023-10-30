@@ -22,8 +22,10 @@ const SearchBooks = () => {
     return () => saveBookIds(savedBookIds);
   });
   // Create a reference to your SAVE_BOOK mutation function
-  const [saveBookMutation] = useMutation(SAVE_BOOK);
-
+  const [saveBookMutation] = useMutation(SAVE_BOOK, {
+    refetchQueries: ["me"]
+  });
+ 
   // Refactor handleSaveBook for GraphQL
   const handleSaveBook = async (bookId) => {
     // Find the book in `searchedBooks` state by the matching id
@@ -45,12 +47,7 @@ const SearchBooks = () => {
       if (data.saveBook.errors && data.saveBook.errors.length) {
         // Handle any errors from the mutation
         console.error(data.saveBook.errors);
-      } else {
-        const { data: userData } = await refetchUserData();
-        const updatedSavedBooks = userData.me.savedBooks;
-
-        setSavedBookIds(updatedSavedBooks.map((book) => book.bookId));
-      }
+      } 
     } catch (err) {
       console.error(err);
     }
