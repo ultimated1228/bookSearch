@@ -19,10 +19,10 @@ const SearchBooks = () => {
   // set up useEffect hook to save `savedBookIds` list to localStorage on component unmount
   // learn more here: https://reactjs.org/docs/hooks-effect.html#effects-with-cleanup
   useEffect(() => {
-    return () => saveBookIds(savedBookIds);
+    saveBookIds(savedBookIds);
   });
   // Create a reference to your SAVE_BOOK mutation function
-  const [saveBookMutation] = useMutation(SAVE_BOOK, {
+  const [saveBook] = useMutation(SAVE_BOOK, {
     refetchQueries: ["me"]
   });
  
@@ -40,14 +40,17 @@ const SearchBooks = () => {
 
     try {
       // Execute the SAVE_BOOK mutation
-      const { data } = await saveBookMutation({
+      const { data } = await saveBook({
         variables: { saveBook: bookToSave }, // Pass the book data as variables
       });
-
+console.log(data);
       if (data.saveBook.errors && data.saveBook.errors.length) {
         // Handle any errors from the mutation
         console.error(data.saveBook.errors);
-      } 
+      } else {
+        const currentBooks = getSavedBookIds()
+        setSavedBookIds([bookId, ...currentBooks ])
+      }
     } catch (err) {
       console.error(err);
     }
@@ -142,6 +145,7 @@ const SearchBooks = () => {
                         className="btn-block btn-info"
                         onClick={() => handleSaveBook(book.bookId)}
                       >
+                        {console.log(savedBookIds)}
                         {savedBookIds?.some(
                           (savedBookId) => savedBookId === book.bookId
                         )
